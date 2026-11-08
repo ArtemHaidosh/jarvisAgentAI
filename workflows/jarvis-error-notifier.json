@@ -1,0 +1,57 @@
+{
+  "id": "JarvisErrorNotif",
+  "name": "Jarvis error notifier",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "74cc0ee8-a2d9-40af-aa79-e80dd7b03be1",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_OWNER_ID }}",
+        "text": "=⚠️ Jarvis error\nWorkflow: {{ $json.workflow.name }}\nNode: {{ $json.execution.lastNodeExecuted }}\nError: {{ $json.execution.error.message }}\n{{ $json.execution.url }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "23fc8f77-ef64-4788-a6c2-b772daf0bb29",
+      "name": "Notify owner",
+      "webhookId": "140ce94d-1812-4c74-a36a-1d05ab62a8de",
+      "credentials": {
+        "telegramApi": {
+          "id": "9L6LEwYJTbPzCf1h",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Notify owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

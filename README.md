@@ -88,6 +88,15 @@ The agent workflow uses the community node `@tavily/n8n-nodes-tavily` for web se
 Install it before importing: n8n → *Settings* → *Community nodes* → *Install*. After import,
 create the credentials (Telegram, Anthropic, Postgres, Tavily) and select them in the nodes.
 
+Message types: text goes straight to the agent, photos are downloaded and passed to Claude as
+images, voice messages are transcribed by Groq Whisper (*Transcribe voice* node). For voice, create
+a free key at https://console.groq.com and a **Header Auth** credential in n8n
+(name `Authorization`, value `Bearer <key>`), then select it in the *Transcribe voice* node.
+Anything else (stickers, documents) gets a short "not supported yet" reply from the agent.
+
+Errors in the *Jarvis* workflow trigger *Jarvis error notifier*, which sends the failing node and
+error message to the owner in Telegram.
+
 Keep **Thinking Mode = Disabled** in the Anthropic Chat Model node. Claude's thinking blocks are
 signed for the exact conversation they were created in; the chat memory keeps a sliding window,
 so stored thinking blocks become invalid and the API returns 400 "Invalid signature in thinking block".

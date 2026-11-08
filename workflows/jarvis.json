@@ -1,0 +1,512 @@
+{
+  "id": "XQfOxGkwS2XIHKmN",
+  "name": "Jarvis",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "043802c8-5f64-4c61-aad9-08f6a85b0863",
+      "name": "Telegram Trigger",
+      "webhookId": "c67cb389-5850-47ee-8804-cf8070937620",
+      "credentials": {
+        "telegramApi": {
+          "id": "9L6LEwYJTbPzCf1h",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "1a83f9a4-0fb1-476c-aba5-e96b8474e7d1",
+              "leftValue": "={{ $json.message.from.id }}",
+              "rightValue": "={{ Number($env.TELEGRAM_OWNER_ID) }}",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        192,
+        0
+      ],
+      "id": "32d41563-2a95-4491-a122-2c1d15e65929",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1900,
+        -80
+      ],
+      "id": "979abc66-566e-40ce-97aa-7390f9e590ec",
+      "name": "Send a text message",
+      "webhookId": "40fa1ef4-7f49-48a8-b4a6-5b7a4f54573a",
+      "credentials": {
+        "telegramApi": {
+          "id": "9L6LEwYJTbPzCf1h",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "options": {
+          "systemMessage": "=Current date and time: {{ DateTime.fromSeconds($('Telegram Trigger').item.json.message.date).toFormat('dd.MM.yyyy HH:mm, cccc') }}\nYou are Jarvis, my personal AI Secretary, manager, and assistant.\n\nPERSONALITY:\n- Be natural, lively, friendly, and human-like.\n- Be honest, direct, witty, and occasionally sarcastic.\n- You may use slang and swear words when appropriate.\n- Never flatter me or blindly agree. If I'm wrong, tell me directly.\n\nLANGUAGE:\n- Always communicate with me in Russian by default.\n- Switch to another language only when I explicitly ask you to, even if temporarily.\n- Afterward, automatically return to Russian.\n\nCOMMUNICATION STYLE:\n- Keep responses short, clear, and straight to the point.\n- No unnecessary introductions, formalities, or filler.\n- Explain complex things simply.\n- If something is unclear, ask a concise follow-up question.\n- Never make up information. Admit when you don't know something.\n\nRESPONSIBILITIES:\n- Manage emails, calendar, meetings, notes, tasks, and reminders.\n- Search the web and answer general questions.\n- Help with personal, professional, and technical matters.\n- Analyze information and support decision-making.\n\nTOOLS:\n- Use available tools whenever needed.\n- Verify the result of every action.\n- Never claim an action was completed unless it actually succeeded.\n- Ask for confirmation before sending emails, deleting data, or performing irreversible actions.\n- Avoid unnecessary questions when you can figure things out yourself.\n\nCORE PRINCIPLE:\nSave my time. Think in dependently, act efficiently, and speak honestly. Less talk, more results."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1532,
+        -80
+      ],
+      "id": "0791af42-7a46-4c6e-a55d-4825bd0b7347",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-haiku-5-5",
+          "mode": "list",
+          "cachedResultName": "Claude Haiku 5.5"
+        },
+        "options": {
+          "thinkingMode": "disabled"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.6,
+      "position": [
+        1532,
+        80
+      ],
+      "id": "41e19887-d10e-4396-950c-81418df6914e",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "DU31FxWuTBZcAPDj",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.4,
+      "position": [
+        1628,
+        80
+      ],
+      "id": "ae25fb04-c101-4724-a434-6659303c5cb3",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "1HRBIePG8MaMyRpH",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {},
+        "descriptionType": "manual",
+        "toolDescription": "Search the internet for accurate, relevant, and up-to-date information.\n\nUse this tool whenever the user asks for current information, news, research, facts that may have changed, product or service comparisons, or information you cannot confidently answer from your existing knowledge.\n\nGuidelines:\n- Create a clear and specific search query based on the user's request.\n- Prefer reliable and authoritative sources.\n- For important facts, compare multiple sources when possible.\n- Prioritize recent information for time-sensitive queries.\n- Do not search the web for simple questions you can answer directly.\n- Never invent search results, facts, or sources.\n- Use the retrieved information to provide a concise, factual answer in Russian.\n- Include relevant source links whenever available."
+      },
+      "type": "@tavily/n8n-nodes-tavily.tavilyTool",
+      "typeVersion": 2.1,
+      "position": [
+        1916,
+        176
+      ],
+      "id": "8df416d9-f8ee-4652-9a96-6ab39c4eec0d",
+      "name": "Search the web in Tavily",
+      "credentials": {
+        "tavilyApi": {
+          "id": "MUzxzwYrpdsKEZyI",
+          "name": "Tavily account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4f21c9bc-c296-48a5-820b-caddd7be6346",
+              "leftValue": "={{ !!$json.message.photo }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        412,
+        0
+      ],
+      "id": "207f3867-399f-42cc-ad7a-eff19dc446a5",
+      "name": "Is photo?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "233bdfa1-2796-4e31-8ea7-98f697766e32",
+              "leftValue": "={{ !!($json.message.voice || $json.message.audio) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        632,
+        200
+      ],
+      "id": "1c7cf6b4-f809-469a-a638-c1e44a21e4bf",
+      "name": "Is voice?"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo.at(-1).file_id }}",
+        "additionalFields": {
+          "mimeType": "image/jpeg"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        632,
+        -200
+      ],
+      "id": "3b31903a-4ca2-4e17-aa09-e0c32b77e4ad",
+      "name": "Download photo",
+      "webhookId": "49b3bb98-c325-447c-97f4-04cddbcb629e",
+      "credentials": {
+        "telegramApi": {
+          "id": "9L6LEwYJTbPzCf1h",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ ($json.message.voice || $json.message.audio).file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        852,
+        100
+      ],
+      "id": "7eb99cd9-7398-435d-b635-b9639b10c44d",
+      "name": "Download voice",
+      "webhookId": "6c3b41d1-1042-46ca-ab16-45baef2cdef9",
+      "credentials": {
+        "telegramApi": {
+          "id": "9L6LEwYJTbPzCf1h",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Telegram voice notes arrive as .oga; transcription APIs accept the same Ogg/Opus data as .ogg\nconst data = $input.item.binary.data;\nconst isOga = data.fileExtension === 'oga' || /\\.oga$/i.test(data.fileName || '');\nconst fixed = isOga ? { ...data, fileName: 'voice.ogg', fileExtension: 'ogg', mimeType: 'audio/ogg' } : data;\nreturn { json: $json, binary: { data: fixed } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        100
+      ],
+      "id": "de997b5e-4e9a-44c9-a659-178e0647d275",
+      "name": "Prepare audio"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/audio/transcriptions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "model",
+              "value": "whisper-large-v3-turbo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1292,
+        100
+      ],
+      "id": "62a55fa0-6d04-4d02-8663-023e457fadfa",
+      "name": "Transcribe voice"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Turns any Telegram message into a text prompt for the agent.\n// A photo keeps its binary so the agent sees the image; audio is dropped after transcription.\nconst m = $('Telegram Trigger').item.json.message;\nlet prompt;\nif (m.text) {\n  prompt = m.text;\n} else if (m.photo) {\n  prompt = m.caption || '[The user sent a photo without a caption. Look at it and respond.]';\n} else if (m.voice || m.audio) {\n  const transcript = String($json.text || '').trim();\n  prompt = transcript\n    ? '[Voice message, transcribed] ' + transcript\n    : '[The user sent a voice message that could not be transcribed. Ask them to send it as text.]';\n} else {\n  const skip = ['message_id', 'from', 'chat', 'date', 'caption', 'entities', 'caption_entities'];\n  const kind = m.sticker\n    ? ('sticker ' + (m.sticker.emoji || '')).trim()\n    : Object.keys(m).filter((k) => !skip.includes(k)).join(', ') || 'unknown';\n  prompt = '[The user sent something you cannot read yet (' + kind + '). '\n    + 'Reply briefly that for now you understand text, photos and voice messages.]';\n}\nconst item = { json: { prompt } };\nif (m.photo) item.binary = $input.item.binary;\nreturn item;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1512,
+        0
+      ],
+      "id": "6535ab49-36fe-4222-bf91-728af127ded6",
+      "name": "Build prompt"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Is photo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search the web in Tavily": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is photo?": {
+      "main": [
+        [
+          {
+            "node": "Download photo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is voice?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download photo": {
+      "main": [
+        [
+          {
+            "node": "Build prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is voice?": {
+      "main": [
+        [
+          {
+            "node": "Download voice",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download voice": {
+      "main": [
+        [
+          {
+            "node": "Prepare audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare audio": {
+      "main": [
+        [
+          {
+            "node": "Transcribe voice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe voice": {
+      "main": [
+        [
+          {
+            "node": "Build prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build prompt": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "errorWorkflow": "JarvisErrorNotif"
+  }
+}
