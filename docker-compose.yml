@@ -1,0 +1,45 @@
+# Local infrastructure: n8n + ngrok tunnel.
+# All secrets come from .env (template: .env.example, created by scripts/setup.ps1).
+name: jarvis
+
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:${N8N_VERSION:-stable}
+    restart: unless-stopped
+    ports:
+      # Editor is reachable only from this machine: http://localhost:5678
+      - "127.0.0.1:5678:5678"
+    environment:
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?run scripts/setup.ps1}
+      # Public URL that n8n gives Telegram when registering the webhook
+      WEBHOOK_URL: https://${NGROK_DOMAIN:?run scripts/setup.ps1}/
+      N8N_EDITOR_BASE_URL: http://localhost:5678/
+      N8N_PROXY_HOPS: "1"
+      GENERIC_TIMEZONE: ${TIMEZONE:-Europe/Kyiv}
+      TZ: ${TIMEZONE:-Europe/Kyiv}
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+    volumes:
+      # Workflows, credentials and execution history survive restarts
+      - n8n_data:/home/node/.n8n
+
+  ngrok:
+    image: ngrok/ngrok:${NGROK_VERSION:-latest}
+    restart: unless-stopped
+    command:
+      - http
+      - n8n:5678
+      - --url=${NGROK_DOMAIN}
+      - --traffic-policy-file=/etc/ngrok/policy.yml
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:?run scripts/setup.ps1}
+    volumes:
+      - ./config/ngrok-policy.yml:/etc/ngrok/policy.yml:ro
+    ports:
+      # ngrok request inspector: http://localhost:4040
+      - "127.0.0.1:4040:4040"
+    depends_on:
+      - n8n
+
+volumes:
+  n8n_data:

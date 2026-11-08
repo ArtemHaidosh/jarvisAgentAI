@@ -1,0 +1,11 @@
+# ngrok rule: only webhook requests to n8n are let in from the internet.
+# Everything else (editor, API, /healthz) gets a 404, so the n8n editor
+# stays reachable only locally: http://localhost:5678
+on_http_request:
+  - expressions:
+      - "!(req.url.path.startsWith('/webhook/') || req.url.path.startsWith('/webhook-test/'))"
+    actions:
+      - type: custom-response
+        config:
+          status_code: 404
+          body: "Not found"
