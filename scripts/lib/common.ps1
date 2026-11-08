@@ -98,9 +98,10 @@ function Assert-DockerReady {
         Write-Fail 'Docker is not installed. Install Docker Desktop: https://www.docker.com/products/docker-desktop/'
         exit 1
     }
-    $null = & docker info --format '{{.ServerVersion}}' 2>$null
+    # `docker info` exits 0 while the engine is still starting, so ask for something only a ready engine answers
+    $null = & docker ps -q 2>$null
     if ($LASTEXITCODE -ne 0) {
-        Write-Fail 'Docker is installed but not running. Open Docker Desktop and wait for "Engine running".'
+        Write-Fail 'Docker is installed but not ready. Open Docker Desktop and wait for "Engine running".'
         exit 1
     }
 }

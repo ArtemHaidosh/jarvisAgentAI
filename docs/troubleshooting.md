@@ -5,7 +5,7 @@ and shows where it breaks.
 
 ## Docker
 
-**"Docker is installed but not running"**: open Docker Desktop and wait for
+**"Docker is installed but not ready"**: open Docker Desktop and wait for
 *Engine running*.
 
 **Port 5678 or 4040 is busy**: another n8n or ngrok is already running.
