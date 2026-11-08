@@ -63,6 +63,9 @@ function Test-Config($Cfg) {
     if ($Cfg['TELEGRAM_BOT_TOKEN'] -notmatch '^\d+:[A-Za-z0-9_-]{30,}$') {
         $problems += 'TELEGRAM_BOT_TOKEN is empty or malformed (expected 123456789:AA...)'
     }
+    if ($Cfg['TELEGRAM_OWNER_ID'] -notmatch '^\d{5,15}$') {
+        $problems += 'TELEGRAM_OWNER_ID is empty or not a number (your Telegram user ID)'
+    }
     if ([string]::IsNullOrWhiteSpace($Cfg['NGROK_AUTHTOKEN']) -or $Cfg['NGROK_AUTHTOKEN'] -match '\s') {
         $problems += 'NGROK_AUTHTOKEN is empty or contains spaces'
     }

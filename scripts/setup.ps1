@@ -27,6 +27,7 @@ if (-not $cfg['POSTGRES_PASSWORD']) {
 
 $prompts = [ordered]@{
     TELEGRAM_BOT_TOKEN = 'Bot token from @BotFather'
+    TELEGRAM_OWNER_ID  = 'Your Telegram user ID (digits; @userinfobot shows it)'
     NGROK_AUTHTOKEN    = 'ngrok authtoken (dashboard.ngrok.com -> Your Authtoken)'
     NGROK_DOMAIN       = 'ngrok static domain (dashboard.ngrok.com -> Domains), e.g. my-name.ngrok-free.app'
 }

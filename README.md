@@ -67,6 +67,23 @@ Credential settings in n8n:
 
 SQL console: `docker compose exec postgres psql -U jarvis -d jarvis`
 
+## Workflows in git
+
+Workflows live inside n8n (Docker volume). To keep them in the repo:
+
+```powershell
+.\scripts\export-workflows.ps1   # n8n -> workflows\*.json
+.\scripts\import-workflows.ps1   # workflows\*.json -> n8n (restore / new machine)
+```
+
+The export keeps only nodes, connections and settings. It drops owner name/e-mail,
+pinned test data and execution state, and refuses to finish if any value from `.env`
+(owner ID, domain, tokens, passwords) is found in a workflow. Credentials are referenced
+by id only; their secrets stay in n8n.
+
+Put private values into workflows as expressions, not literals, e.g. the owner filter:
+`{{ $env.TELEGRAM_OWNER_ID }}`.
+
 ## Tests
 
 ```powershell
@@ -87,7 +104,8 @@ SQL console: `docker compose exec postgres psql -U jarvis -d jarvis`
 docker-compose.yml        n8n + Postgres + ngrok
 config/ngrok-policy.yml   what ngrok lets in from the internet
 .env.example              settings template (no secrets)
-scripts/                  setup / start / stop / status
+scripts/                  setup / start / stop / status / export- and import-workflows
+workflows/                exported n8n workflows
 tests/run-tests.ps1       checks
 docs/troubleshooting.md   common problems
 ```

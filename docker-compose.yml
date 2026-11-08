@@ -20,6 +20,11 @@ services:
       GENERIC_TIMEZONE: ${TIMEZONE:-Europe/Kyiv}
       TZ: ${TIMEZONE:-Europe/Kyiv}
       N8N_DIAGNOSTICS_ENABLED: "false"
+      # Owner's Telegram ID. Workflows read it as {{ $env.TELEGRAM_OWNER_ID }}, so it stays out of git
+      TELEGRAM_OWNER_ID: ${TELEGRAM_OWNER_ID:?run scripts/setup.ps1}
+      # Lets expressions read $env (needed for the line above). Expressions can then see every
+      # variable of this container, so import only workflows you trust.
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
       N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
     volumes:
       # Workflows, credentials and execution history survive restarts

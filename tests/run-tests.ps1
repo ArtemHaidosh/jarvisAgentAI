@@ -38,13 +38,16 @@ function Get-RepoFiles {
 }
 
 $secretKeys = 'TELEGRAM_BOT_TOKEN', 'NGROK_AUTHTOKEN', 'N8N_ENCRYPTION_KEY', 'POSTGRES_PASSWORD'
+# Not secrets, but personal: must not appear in a public repo either
+$privateKeys = $secretKeys + 'TELEGRAM_OWNER_ID', 'NGROK_DOMAIN'
 
 Write-Step 'Static checks'
 
 Check 'All package files are present' {
     $required = 'docker-compose.yml', '.env.example', '.gitignore', 'config\ngrok-policy.yml', 'README.md',
                 'docs\troubleshooting.md', 'scripts\setup.ps1', 'scripts\start.ps1', 'scripts\stop.ps1',
-                'scripts\status.ps1', 'scripts\lib\common.ps1'
+                'scripts\status.ps1', 'scripts\lib\common.ps1', 'scripts\export-workflows.ps1',
+                'scripts\import-workflows.ps1', 'scripts\lib\sanitize-workflows.js'
     $missing = $required | Where-Object { -not (Test-Path -LiteralPath (Join-Path $RepoRoot $_)) }
     Assert ($missing.Count -eq 0) "missing: $($missing -join ', ')"
 }
@@ -64,14 +67,14 @@ Check '.env.example declares every variable used in docker-compose.yml' {
 
 Check '.env.example contains no secrets' {
     $example = Read-DotEnv $EnvExamplePath
-    $filled = $secretKeys | Where-Object { $example[$_] }
+    $filled = $privateKeys | Where-Object { $example[$_] }
     Assert ($filled.Count -eq 0) "filled-in values: $($filled -join ', ')"
 }
 
 Check 'docker-compose.yml is valid' {
     if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { Skip 'docker is not installed' }
     $tmp = Join-Path ([IO.Path]::GetTempPath()) "jarvis-test-$PID.env"
-    $dummy = "TELEGRAM_BOT_TOKEN=123456789:test`nNGROK_AUTHTOKEN=test`nNGROK_DOMAIN=example.ngrok-free.app`nN8N_ENCRYPTION_KEY=test`nPOSTGRES_PASSWORD=test`n"
+    $dummy = "TELEGRAM_BOT_TOKEN=123456789:test`nNGROK_AUTHTOKEN=test`nNGROK_DOMAIN=example.ngrok-free.app`nN8N_ENCRYPTION_KEY=test`nPOSTGRES_PASSWORD=test`nTELEGRAM_OWNER_ID=1`n"
     [IO.File]::WriteAllText($tmp, $dummy)
     try {
         $json = & docker compose -f $ComposeFile --env-file $tmp config --format json 2>&1
@@ -107,14 +110,30 @@ Check 'Non-ASCII PowerShell scripts are saved as UTF-8 with BOM (PowerShell 5.1 
 Check 'No secrets in files that go into git' {
     $files = Get-RepoFiles
     $local = Read-DotEnv
-    $values = $secretKeys | ForEach-Object { $local[$_] } | Where-Object { $_ -and $_.Length -ge 8 }
     $leaks = foreach ($f in $files) {
         $text = [IO.File]::ReadAllText($f)
         if ($text -match '\b\d{8,10}:[A-Za-z0-9_-]{35}\b') { "$f (looks like a Telegram token)" }
-        foreach ($v in $values) { if ($text.Contains($v)) { "$f (value from .env)" } }
+        if ($text -match 'sk-ant-[A-Za-z0-9_-]{20,}') { "$f (looks like an Anthropic API key)" }
+        foreach ($k in $privateKeys) {
+            $v = $local[$k]
+            if ($v -and $v.Length -ge 5 -and $text.Contains($v)) { "$f (contains $k from .env)" }
+        }
     }
     Assert (@($leaks).Count -eq 0) ($leaks -join '; ')
     "files checked: $(@($files).Count)"
+}
+
+Check 'Exported workflows hold no personal or runtime data' {
+    $files = @(Get-ChildItem -Path (Join-Path $RepoRoot 'workflows') -Filter *.json -ErrorAction SilentlyContinue)
+    if ($files.Count -eq 0) { Skip 'no workflows exported yet (scripts\export-workflows.ps1)' }
+    $allowed = 'id', 'name', 'nodes', 'connections', 'settings'
+    $bad = foreach ($f in $files) {
+        $wf = [IO.File]::ReadAllText($f.FullName) | ConvertFrom-Json
+        $extra = $wf.PSObject.Properties.Name | Where-Object { $allowed -notcontains $_ }
+        if ($extra) { "$($f.Name): $($extra -join ', ')" }
+    }
+    Assert (@($bad).Count -eq 0) "unexpected fields (re-export with scripts\export-workflows.ps1): $($bad -join '; ')"
+    "workflows checked: $($files.Count)"
 }
 
 if ($Smoke) {
