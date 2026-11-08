@@ -8,6 +8,9 @@ Write-Step 'Containers'
 Assert-DockerReady
 Invoke-Compose ps
 
+Write-Step 'Postgres'
+if (Test-PostgresReady) { Write-Ok 'Accepting connections (from n8n: host postgres, port 5432)' } else { Write-Fail 'Not ready. Logs: docker compose logs postgres' }
+
 Write-Step 'n8n'
 if (Test-N8nHealthy) { Write-Ok "Running: $N8nLocalUrl" } else { Write-Fail 'Not responding. Run scripts\start.ps1' }
 

@@ -20,6 +20,10 @@ if (-not $cfg['N8N_ENCRYPTION_KEY']) {
     Set-DotEnvValue 'N8N_ENCRYPTION_KEY' (New-EncryptionKey)
     Write-Ok 'Generated N8N_ENCRYPTION_KEY'
 }
+if (-not $cfg['POSTGRES_PASSWORD']) {
+    Set-DotEnvValue 'POSTGRES_PASSWORD' (New-EncryptionKey)
+    Write-Ok 'Generated POSTGRES_PASSWORD'
+}
 
 $prompts = [ordered]@{
     TELEGRAM_BOT_TOKEN = 'Bot token from @BotFather'

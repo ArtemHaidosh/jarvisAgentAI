@@ -72,6 +72,9 @@ function Test-Config($Cfg) {
     if ($Cfg['N8N_ENCRYPTION_KEY'] -notmatch '^\S{16,}$') {
         $problems += 'N8N_ENCRYPTION_KEY is empty (scripts\setup.ps1 generates it)'
     }
+    if ($Cfg['POSTGRES_PASSWORD'] -notmatch '^\S{16,}$') {
+        $problems += 'POSTGRES_PASSWORD is empty (scripts\setup.ps1 generates it)'
+    }
     return ,$problems
 }
 
@@ -130,6 +133,11 @@ function Invoke-Http([string]$Uri, [hashtable]$Headers = @{}, [int]$TimeoutSec =
     } catch {
         return [pscustomobject]@{ Status = 0; Body = $_.Exception.Message }
     }
+}
+
+function Test-PostgresReady {
+    $null = Invoke-Compose exec -T postgres pg_isready -U jarvis -d jarvis 2>$null
+    return $LASTEXITCODE -eq 0
 }
 
 function Test-N8nHealthy {

@@ -24,6 +24,27 @@ services:
     volumes:
       # Workflows, credentials and execution history survive restarts
       - n8n_data:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Database for the agent's data (chat memory etc.). No published ports:
+  # only containers on this network reach it, n8n as host "postgres", port 5432.
+  postgres:
+    # Pinned major version: a new major can't read old data without a migration
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: jarvis
+      POSTGRES_DB: jarvis
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run scripts/setup.ps1}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jarvis -d jarvis"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   ngrok:
     image: ngrok/ngrok:${NGROK_VERSION:-latest}
@@ -45,3 +66,4 @@ services:
 
 volumes:
   n8n_data:
+  postgres_data:

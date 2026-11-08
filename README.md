@@ -50,6 +50,23 @@ On first open, n8n asks you to create an owner account. It is local only.
 > *Listen for test event* temporarily switches the bot's webhook to a test URL.
 > When you're done testing, toggle the workflow off and on again to restore the production URL.
 
+## Postgres (agent memory)
+
+A Postgres container stores the agent's data, e.g. chat history for the
+**Postgres Chat Memory** node. It has no published ports: only n8n can reach it.
+Credential settings in n8n:
+
+| Field | Value |
+|---|---|
+| Host | `postgres` |
+| Database | `jarvis` |
+| User | `jarvis` |
+| Password | `POSTGRES_PASSWORD` from `.env` |
+| Port | `5432` |
+| SSL | `Disable` |
+
+SQL console: `docker compose exec postgres psql -U jarvis -d jarvis`
+
 ## Tests
 
 ```powershell
@@ -67,7 +84,7 @@ On first open, n8n asks you to create an owner account. It is local only.
 ## Layout
 
 ```
-docker-compose.yml        n8n + ngrok
+docker-compose.yml        n8n + Postgres + ngrok
 config/ngrok-policy.yml   what ngrok lets in from the internet
 .env.example              settings template (no secrets)
 scripts/                  setup / start / stop / status
@@ -75,5 +92,5 @@ tests/run-tests.ps1       checks
 docs/troubleshooting.md   common problems
 ```
 
-n8n data is stored in the Docker volume `jarvis_n8n_data`. `docker compose down -v`
-**deletes** it together with all workflows.
+n8n data is stored in the Docker volume `jarvis_n8n_data`, the database in `jarvis_postgres_data`.
+`docker compose down -v` **deletes** both, together with all workflows and the agent's memory.

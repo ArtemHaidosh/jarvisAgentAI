@@ -37,7 +37,7 @@ function Get-RepoFiles {
     } finally { Pop-Location }
 }
 
-$secretKeys = 'TELEGRAM_BOT_TOKEN', 'NGROK_AUTHTOKEN', 'N8N_ENCRYPTION_KEY'
+$secretKeys = 'TELEGRAM_BOT_TOKEN', 'NGROK_AUTHTOKEN', 'N8N_ENCRYPTION_KEY', 'POSTGRES_PASSWORD'
 
 Write-Step 'Static checks'
 
@@ -71,7 +71,7 @@ Check '.env.example contains no secrets' {
 Check 'docker-compose.yml is valid' {
     if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { Skip 'docker is not installed' }
     $tmp = Join-Path ([IO.Path]::GetTempPath()) "jarvis-test-$PID.env"
-    $dummy = "TELEGRAM_BOT_TOKEN=123456789:test`nNGROK_AUTHTOKEN=test`nNGROK_DOMAIN=example.ngrok-free.app`nN8N_ENCRYPTION_KEY=test`n"
+    $dummy = "TELEGRAM_BOT_TOKEN=123456789:test`nNGROK_AUTHTOKEN=test`nNGROK_DOMAIN=example.ngrok-free.app`nN8N_ENCRYPTION_KEY=test`nPOSTGRES_PASSWORD=test`n"
     [IO.File]::WriteAllText($tmp, $dummy)
     try {
         $json = & docker compose -f $ComposeFile --env-file $tmp config --format json 2>&1
@@ -126,6 +126,10 @@ if ($Smoke) {
 
     Check 'n8n responds locally' {
         Assert (Test-N8nHealthy) "$N8nLocalUrl/healthz is not responding"
+    }
+
+    Check 'Postgres accepts connections' {
+        Assert (Test-PostgresReady) 'pg_isready failed (docker compose logs postgres)'
     }
 
     Check 'ngrok tunnel is up on your domain' {
