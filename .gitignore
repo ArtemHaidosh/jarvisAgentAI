@@ -6,3 +6,11 @@
 # Local artifacts
 *.log
 backups/
+
+# Editors and OS
+.vscode/
+.idea/
+.claude/
+Thumbs.db
+Desktop.ini
+.DS_Store

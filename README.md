@@ -84,6 +84,14 @@ by id only; their secrets stay in n8n.
 Put private values into workflows as expressions, not literals, e.g. the owner filter:
 `{{ $env.TELEGRAM_OWNER_ID }}`.
 
+The agent workflow uses the community node `@tavily/n8n-nodes-tavily` for web search.
+Install it before importing: n8n → *Settings* → *Community nodes* → *Install*. After import,
+create the credentials (Telegram, Anthropic, Postgres, Tavily) and select them in the nodes.
+
+Keep **Thinking Mode = Disabled** in the Anthropic Chat Model node. Claude's thinking blocks are
+signed for the exact conversation they were created in; the chat memory keeps a sliding window,
+so stored thinking blocks become invalid and the API returns 400 "Invalid signature in thinking block".
+
 ## Tests
 
 ```powershell
