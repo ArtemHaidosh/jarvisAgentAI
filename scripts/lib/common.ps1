@@ -122,8 +122,11 @@ function Invoke-Http([string]$Uri, [hashtable]$Headers = @{}, [int]$TimeoutSec =
     } catch [System.Net.WebException] {
         $resp = $_.Exception.Response
         if ($null -eq $resp) { return [pscustomobject]@{ Status = 0; Body = $_.Exception.Message } }
-        $reader = New-Object IO.StreamReader($resp.GetResponseStream())
-        return [pscustomobject]@{ Status = [int]$resp.StatusCode; Body = $reader.ReadToEnd() }
+        # PowerShell 5.1 has already read the error body into ErrorDetails; the stream is empty by now
+        $body = if ($_.ErrorDetails -and $_.ErrorDetails.Message) { $_.ErrorDetails.Message } else {
+            (New-Object IO.StreamReader($resp.GetResponseStream())).ReadToEnd()
+        }
+        return [pscustomobject]@{ Status = [int]$resp.StatusCode; Body = $body }
     } catch {
         return [pscustomobject]@{ Status = 0; Body = $_.Exception.Message }
     }

@@ -12,6 +12,8 @@ services:
     environment:
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?run scripts/setup.ps1}
       # Public URL that n8n gives Telegram when registering the webhook
+      # (N8N_WEBHOOK_URL in current n8n; WEBHOOK_URL kept for older versions)
+      N8N_WEBHOOK_URL: https://${NGROK_DOMAIN:?run scripts/setup.ps1}/
       WEBHOOK_URL: https://${NGROK_DOMAIN:?run scripts/setup.ps1}/
       N8N_EDITOR_BASE_URL: http://localhost:5678/
       N8N_PROXY_HOPS: "1"
