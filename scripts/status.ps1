@@ -4,50 +4,50 @@
 $cfg = Get-Config
 $domain = $cfg['NGROK_DOMAIN']
 
-Write-Step 'Контейнери'
+Write-Step 'Containers'
 Assert-DockerReady
 Invoke-Compose ps
 
 Write-Step 'n8n'
-if (Test-N8nHealthy) { Write-Ok "Працює: $N8nLocalUrl" } else { Write-Fail 'Не відповідає. Запустіть scripts\start.ps1' }
+if (Test-N8nHealthy) { Write-Ok "Running: $N8nLocalUrl" } else { Write-Fail 'Not responding. Run scripts\start.ps1' }
 
 Write-Step 'ngrok'
 $publicUrl = Get-TunnelUrl
 if (-not $publicUrl) {
-    Write-Fail 'Tunnel не активний. Логи: docker compose logs ngrok'
+    Write-Fail 'Tunnel is not up. Logs: docker compose logs ngrok'
 } elseif ($publicUrl -ne "https://$domain") {
-    Write-Warn "Tunnel активний, але на іншій адресі: $publicUrl (очікувалось https://$domain)"
+    Write-Warn "Tunnel is up but on a different URL: $publicUrl (expected https://$domain)"
 } else {
-    Write-Ok "Активний: $publicUrl"
+    Write-Ok "Up: $publicUrl"
 }
 
 Write-Step 'Telegram'
 $me = Invoke-Telegram $cfg['TELEGRAM_BOT_TOKEN'] 'getMe'
 if (-not $me.ok) {
-    Write-Fail "Токен бота не працює: $($me.description)"
+    Write-Fail "Bot token does not work: $($me.description)"
     exit 1
 }
-Write-Ok "Бот: @$($me.result.username)"
+Write-Ok "Bot: @$($me.result.username)"
 
 $info = Invoke-Telegram $cfg['TELEGRAM_BOT_TOKEN'] 'getWebhookInfo'
 if (-not $info.ok) {
-    Write-Fail "Не вдалося отримати webhook: $($info.description)"
+    Write-Fail "Could not fetch webhook info: $($info.description)"
     exit 1
 }
 $wh = $info.result
 if (-not $wh.url) {
-    Write-Warn 'Webhook не встановлено. Активуйте у n8n workflow з вузлом Telegram Trigger.'
+    Write-Warn 'Webhook is not set. Activate a workflow with a Telegram Trigger node in n8n.'
 } elseif ($wh.url -like "https://$domain/webhook-test/*") {
-    Write-Warn "Webhook у тестовому режимі n8n: $($wh.url)"
-    Write-Host '       Він працює лише поки в редакторі натиснуто "Listen for test event". Для постійної роботи активуйте workflow.'
+    Write-Warn "Webhook is in n8n test mode: $($wh.url)"
+    Write-Host '       It only works while "Listen for test event" is pressed in the editor. Activate the workflow for permanent use.'
 } elseif ($wh.url -like "https://$domain/webhook/*") {
     Write-Ok "Webhook: $($wh.url)"
 } else {
-    Write-Warn "Webhook вказує на чужу адресу: $($wh.url)"
-    Write-Host '       Деактивуйте і знову активуйте workflow у n8n, щоб він зареєструвався заново.'
+    Write-Warn "Webhook points to a foreign URL: $($wh.url)"
+    Write-Host '       Deactivate and re-activate the workflow in n8n so it registers again.'
 }
-if ($wh.pending_update_count -gt 0) { Write-Warn "Повідомлень у черзі Telegram: $($wh.pending_update_count)" }
+if ($wh.pending_update_count -gt 0) { Write-Warn "Updates queued in Telegram: $($wh.pending_update_count)" }
 if ($wh.last_error_message) {
     $when = [DateTimeOffset]::FromUnixTimeSeconds([long]$wh.last_error_date).LocalDateTime
-    Write-Warn "Остання помилка доставки ($when): $($wh.last_error_message)"
+    Write-Warn "Last delivery error ($when): $($wh.last_error_message)"
 }

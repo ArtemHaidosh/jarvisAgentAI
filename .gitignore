@@ -1,8 +1,8 @@
-# Секрети
+# Secrets
 .env
 .env.*
 !.env.example
 
-# Локальні артефакти
+# Local artifacts
 *.log
 backups/

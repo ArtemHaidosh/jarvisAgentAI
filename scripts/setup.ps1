@@ -2,29 +2,29 @@
 # Safe to re-run: values that are already filled in are not overwritten.
 . "$PSScriptRoot\lib\common.ps1"
 
-Write-Step 'Перевіряю Docker'
+Write-Step 'Checking Docker'
 Assert-DockerReady
-Write-Ok 'Docker запущений'
+Write-Ok 'Docker is running'
 
-Write-Step 'Готую файл .env'
+Write-Step 'Preparing .env'
 if (-not (Test-Path -LiteralPath $EnvPath)) {
     Copy-Item -LiteralPath $EnvExamplePath -Destination $EnvPath
-    Write-Ok '.env створено з .env.example'
+    Write-Ok '.env created from .env.example'
 } else {
-    Write-Ok '.env уже існує, доповнюю лише порожні значення'
+    Write-Ok '.env already exists, filling in only empty values'
 }
 
 $cfg = Read-DotEnv
 
 if (-not $cfg['N8N_ENCRYPTION_KEY']) {
     Set-DotEnvValue 'N8N_ENCRYPTION_KEY' (New-EncryptionKey)
-    Write-Ok 'Згенеровано N8N_ENCRYPTION_KEY'
+    Write-Ok 'Generated N8N_ENCRYPTION_KEY'
 }
 
 $prompts = [ordered]@{
-    TELEGRAM_BOT_TOKEN = 'Токен бота від @BotFather'
+    TELEGRAM_BOT_TOKEN = 'Bot token from @BotFather'
     NGROK_AUTHTOKEN    = 'ngrok authtoken (dashboard.ngrok.com -> Your Authtoken)'
-    NGROK_DOMAIN       = 'Статичний домен ngrok (dashboard.ngrok.com -> Domains), напр. my-name.ngrok-free.app'
+    NGROK_DOMAIN       = 'ngrok static domain (dashboard.ngrok.com -> Domains), e.g. my-name.ngrok-free.app'
 }
 foreach ($key in $prompts.Keys) {
     if ($cfg[$key]) { continue }
@@ -36,18 +36,18 @@ foreach ($key in $prompts.Keys) {
 $problems = Test-Config (Read-DotEnv)
 if ($problems.Count -gt 0) {
     foreach ($p in $problems) { Write-Fail $p }
-    Write-Host '  Відкрийте .env у редакторі, виправте значення і запустіть setup.ps1 знову.'
+    Write-Host '  Open .env in an editor, fix the values and run setup.ps1 again.'
     exit 1
 }
 
-Write-Step 'Перевіряю токен бота в Telegram'
+Write-Step 'Checking the bot token with Telegram'
 $me = Invoke-Telegram (Read-DotEnv)['TELEGRAM_BOT_TOKEN'] 'getMe'
 if ($me.ok) {
-    Write-Ok "Бот знайдено: @$($me.result.username)"
+    Write-Ok "Bot found: @$($me.result.username)"
 } else {
-    Write-Fail "Telegram не прийняв токен: $($me.description)"
+    Write-Fail "Telegram rejected the token: $($me.description)"
     exit 1
 }
 
 Write-Host ''
-Write-Ok 'Налаштування завершено. Далі: scripts\start.ps1'
+Write-Ok 'Setup complete. Next: scripts\start.ps1'

@@ -4,34 +4,34 @@
 $cfg = Get-Config
 Assert-DockerReady
 
-Write-Step 'Запускаю n8n і ngrok (перший запуск завантажує образи, це може зайняти кілька хвилин)'
+Write-Step 'Starting n8n and ngrok (the first run downloads images and may take a few minutes)'
 Invoke-Compose up -d
 if ($LASTEXITCODE -ne 0) {
-    Write-Fail 'docker compose не зміг запустити контейнери. Подивіться помилку вище або docs\troubleshooting.md'
+    Write-Fail 'docker compose failed to start the containers. See the error above or docs\troubleshooting.md'
     exit 1
 }
 
-Write-Step 'Чекаю на n8n'
+Write-Step 'Waiting for n8n'
 if (-not (Wait-Until 'n8n' { Test-N8nHealthy } -TimeoutSec 120)) {
-    Write-Host '  Логи: docker compose logs n8n'
+    Write-Host '  Logs: docker compose logs n8n'
     exit 1
 }
-Write-Ok 'n8n працює'
+Write-Ok 'n8n is up'
 
-Write-Step 'Чекаю на ngrok tunnel'
+Write-Step 'Waiting for the ngrok tunnel'
 if (-not (Wait-Until 'ngrok' { Get-TunnelUrl } -TimeoutSec 60)) {
-    Write-Host '  Логи: docker compose logs ngrok'
+    Write-Host '  Logs: docker compose logs ngrok'
     exit 1
 }
 $publicUrl = Get-TunnelUrl
-Write-Ok "Tunnel активний: $publicUrl"
+Write-Ok "Tunnel is up: $publicUrl"
 if ($publicUrl -ne "https://$($cfg['NGROK_DOMAIN'])") {
-    Write-Warn "Адреса тунелю не збігається з NGROK_DOMAIN=$($cfg['NGROK_DOMAIN'])"
+    Write-Warn "Tunnel URL does not match NGROK_DOMAIN=$($cfg['NGROK_DOMAIN'])"
 }
 
 Write-Host ''
-Write-Host "  Редактор n8n:        $N8nLocalUrl" -ForegroundColor White
-Write-Host "  Публічні webhook:    $publicUrl/webhook/..." -ForegroundColor White
-Write-Host "  Інспектор запитів:   http://localhost:4040" -ForegroundColor White
+Write-Host "  n8n editor:          $N8nLocalUrl" -ForegroundColor White
+Write-Host "  Public webhooks:     $publicUrl/webhook/..." -ForegroundColor White
+Write-Host "  Request inspector:   http://localhost:4040" -ForegroundColor White
 Write-Host ''
-Write-Host '  Перевірити стан: scripts\status.ps1    Зупинити: scripts\stop.ps1'
+Write-Host '  Check status: scripts\status.ps1    Stop: scripts\stop.ps1'

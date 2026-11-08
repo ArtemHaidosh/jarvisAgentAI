@@ -61,16 +61,16 @@ function ConvertTo-NgrokDomain([string]$Value) {
 function Test-Config($Cfg) {
     $problems = @()
     if ($Cfg['TELEGRAM_BOT_TOKEN'] -notmatch '^\d+:[A-Za-z0-9_-]{30,}$') {
-        $problems += 'TELEGRAM_BOT_TOKEN порожній або має неправильний формат (очікується 123456789:AA...)'
+        $problems += 'TELEGRAM_BOT_TOKEN is empty or malformed (expected 123456789:AA...)'
     }
     if ([string]::IsNullOrWhiteSpace($Cfg['NGROK_AUTHTOKEN']) -or $Cfg['NGROK_AUTHTOKEN'] -match '\s') {
-        $problems += 'NGROK_AUTHTOKEN порожній або містить пробіли'
+        $problems += 'NGROK_AUTHTOKEN is empty or contains spaces'
     }
     if ($Cfg['NGROK_DOMAIN'] -notmatch '^[a-z0-9-]+(\.[a-z0-9-]+)+$') {
-        $problems += 'NGROK_DOMAIN порожній або неправильний (очікується щось на кшталт my-name.ngrok-free.app)'
+        $problems += 'NGROK_DOMAIN is empty or invalid (expected something like my-name.ngrok-free.app)'
     }
     if ($Cfg['N8N_ENCRYPTION_KEY'] -notmatch '^\S{16,}$') {
-        $problems += 'N8N_ENCRYPTION_KEY порожній (його генерує scripts\setup.ps1)'
+        $problems += 'N8N_ENCRYPTION_KEY is empty (scripts\setup.ps1 generates it)'
     }
     return ,$problems
 }
@@ -78,14 +78,14 @@ function Test-Config($Cfg) {
 # Reads .env and stops the script with a clear message if anything is missing.
 function Get-Config {
     if (-not (Test-Path -LiteralPath $EnvPath)) {
-        Write-Fail 'Файл .env не знайдено. Спочатку запустіть: scripts\setup.ps1'
+        Write-Fail '.env not found. Run scripts\setup.ps1 first.'
         exit 1
     }
     $cfg = Read-DotEnv
     $problems = Test-Config $cfg
     if ($problems.Count -gt 0) {
         foreach ($p in $problems) { Write-Fail $p }
-        Write-Host '  Виправте .env вручну або запустіть scripts\setup.ps1 ще раз.'
+        Write-Host '  Fix .env by hand or run scripts\setup.ps1 again.'
         exit 1
     }
     return $cfg
@@ -95,12 +95,12 @@ function Get-Config {
 
 function Assert-DockerReady {
     if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
-        Write-Fail 'Docker не встановлено. Встановіть Docker Desktop: https://www.docker.com/products/docker-desktop/'
+        Write-Fail 'Docker is not installed. Install Docker Desktop: https://www.docker.com/products/docker-desktop/'
         exit 1
     }
     $null = & docker info --format '{{.ServerVersion}}' 2>$null
     if ($LASTEXITCODE -ne 0) {
-        Write-Fail 'Docker встановлено, але він не запущений. Відкрийте Docker Desktop і дочекайтесь статусу "Engine running".'
+        Write-Fail 'Docker is installed but not running. Open Docker Desktop and wait for "Engine running".'
         exit 1
     }
 }
@@ -148,7 +148,7 @@ function Wait-Until([string]$What, [scriptblock]$Condition, [int]$TimeoutSec = 9
         if (& $Condition) { return $true }
         Start-Sleep -Seconds 2
     }
-    Write-Fail "$What не відповів за $TimeoutSec с"
+    Write-Fail "$What did not respond within $TimeoutSec s"
     return $false
 }
 
