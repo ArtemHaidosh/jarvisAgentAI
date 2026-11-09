@@ -471,8 +471,9 @@
         "operation": "getAll",
         "calendar": {
           "__rl": true,
-          "mode": "id",
-          "value": "primary"
+          "mode": "list",
+          "value": "primary",
+          "cachedResultName": "Primary"
         },
         "returnAll": false,
         "limit": 50,
@@ -506,8 +507,9 @@
         "operation": "create",
         "calendar": {
           "__rl": true,
-          "mode": "id",
-          "value": "primary"
+          "mode": "list",
+          "value": "primary",
+          "cachedResultName": "Primary"
         },
         "start": "={{ $fromAI('start', 'Event start, ISO 8601 date-time with the timezone offset, e.g. 2026-11-12T15:00:00+01:00', 'string') }}",
         "end": "={{ $fromAI('end', 'Event end, ISO 8601 date-time with the timezone offset, e.g. 2026-11-12T15:00:00+01:00. Default length is one hour if I did not say otherwise', 'string') }}",
