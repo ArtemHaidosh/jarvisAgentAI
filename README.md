@@ -102,6 +102,17 @@ See what it remembers: `docker compose exec postgres psql -U jarvis -d jarvis -c
 Replies show a "typing..." status while the agent works, are split into several messages when
 longer than Telegram allows, and support **bold**, `code` and links (sent as Telegram HTML).
 
+Google tools: the agent can list and create events in the primary Google Calendar, search and read
+Gmail, and create Gmail **drafts**. It cannot send, delete or move emails, or change or delete
+events. Setup: a Google Cloud project with the Gmail and Google Calendar APIs enabled, an OAuth
+consent screen with your account as a test user (or published), and a Web OAuth client with the
+redirect URI `http://localhost:5678/rest/oauth2-credential/callback`. In n8n, create the
+*Google Calendar OAuth2 API* and *Gmail OAuth2 API* credentials with that client and select them
+in the tool nodes. In Testing mode Google expires the sign-in after 7 days; reconnect with
+*Sign in with Google* in the credential.
+
+Set `TIMEZONE` in `.env` to your own timezone: event times and the date in the prompt use it.
+
 Errors in the *Jarvis* workflow trigger *Jarvis error notifier*, which sends the failing node and
 error message to the owner in Telegram.
 
