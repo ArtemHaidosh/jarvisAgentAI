@@ -47,7 +47,7 @@ Check 'All package files are present' {
     $required = 'docker-compose.yml', '.env.example', '.gitignore', 'config\ngrok-policy.yml', 'README.md',
                 'docs\troubleshooting.md', 'scripts\setup.ps1', 'scripts\start.ps1', 'scripts\stop.ps1',
                 'scripts\status.ps1', 'scripts\lib\common.ps1', 'scripts\export-workflows.ps1',
-                'scripts\import-workflows.ps1', 'scripts\lib\sanitize-workflows.js'
+                'scripts\import-workflows.ps1', 'scripts\lib\sanitize-workflows.js', 'config\postgres\init.sql'
     $missing = $required | Where-Object { -not (Test-Path -LiteralPath (Join-Path $RepoRoot $_)) }
     Assert ($missing.Count -eq 0) "missing: $($missing -join ', ')"
 }

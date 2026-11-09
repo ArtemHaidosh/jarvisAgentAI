@@ -11,6 +11,14 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+Write-Step 'Applying the database schema'
+$null = Invoke-Compose exec -T postgres psql -q -v ON_ERROR_STOP=1 -U jarvis -d jarvis -f /docker-entrypoint-initdb.d/init.sql 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Fail 'Could not apply config\postgres\init.sql. Logs: docker compose logs postgres'
+    exit 1
+}
+Write-Ok 'Schema is up to date'
+
 Write-Step 'Waiting for n8n'
 if (-not (Wait-Until 'n8n' { Test-N8nHealthy } -TimeoutSec 120)) {
     Write-Host '  Logs: docker compose logs n8n'

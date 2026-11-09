@@ -94,6 +94,14 @@ a free key at https://console.groq.com and a **Header Auth** credential in n8n
 (name `Authorization`, value `Bearer <key>`), then select it in the *Transcribe voice* node.
 Anything else (stickers, documents) gets a short "not supported yet" reply from the agent.
 
+Long-term memory: facts about the owner live in the `jarvis_facts` table
+(`config/postgres/init.sql`, applied by `start.ps1`). *Load facts* puts them into the system prompt
+on every message; the agent adds and removes them with the *Save fact* / *Forget fact* tools.
+See what it remembers: `docker compose exec postgres psql -U jarvis -d jarvis -c "SELECT * FROM jarvis_facts"`.
+
+Replies show a "typing..." status while the agent works, are split into several messages when
+longer than Telegram allows, and support **bold**, `code` and links (sent as Telegram HTML).
+
 Errors in the *Jarvis* workflow trigger *Jarvis error notifier*, which sends the failing node and
 error message to the owner in Telegram.
 

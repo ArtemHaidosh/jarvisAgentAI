@@ -45,6 +45,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run scripts/setup.ps1}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # Agent schema; runs on first init and again from start.ps1 (idempotent)
+      - ./config/postgres:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U jarvis -d jarvis"]
       interval: 5s
